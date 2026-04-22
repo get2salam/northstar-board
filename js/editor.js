@@ -1,6 +1,6 @@
 // editor.js — side panel for creating and editing stars.
 
-import { NODE_STATUSES, NODE_TYPES } from "./store.js";
+import { LINK_KINDS, NODE_STATUSES, NODE_TYPES } from "./store.js";
 
 const STATUS_LABELS = {
   plan: "Planned",
@@ -129,6 +129,83 @@ export function createEditor(mountEl, store, board) {
       ["Make northstar"],
     );
 
+    // ---- links section ----
+    const state = store.get();
+    const otherNodes = state.nodes.filter((n) => n.id !== node.id);
+    const outgoing = state.links.filter((l) => l.from === node.id);
+    const incoming = state.links.filter((l) => l.to === node.id);
+    const titleOf = (id) => state.nodes.find((n) => n.id === id)?.title ?? "?";
+
+    const linkList = h("ul", { class: "link-list" }, [
+      ...outgoing.map((l) =>
+        h("li", { class: `link-row link-${l.kind}` }, [
+          h("span", { class: "link-dir" }, [l.kind === "depends" ? "→ depends on" : "↔ relates to"]),
+          h("span", { class: "link-name" }, [titleOf(l.to)]),
+          h(
+            "button",
+            {
+              class: "icon-btn tiny",
+              "aria-label": "Remove link",
+              onclick: () => store.removeLink(l.id),
+            },
+            ["×"],
+          ),
+        ]),
+      ),
+      ...incoming.map((l) =>
+        h("li", { class: `link-row link-${l.kind} incoming` }, [
+          h("span", { class: "link-dir" }, [l.kind === "depends" ? "← enables" : "↔ relates to"]),
+          h("span", { class: "link-name" }, [titleOf(l.from)]),
+          h(
+            "button",
+            {
+              class: "icon-btn tiny",
+              "aria-label": "Remove link",
+              onclick: () => store.removeLink(l.id),
+            },
+            ["×"],
+          ),
+        ]),
+      ),
+      outgoing.length + incoming.length === 0
+        ? h("li", { class: "link-empty" }, ["No links yet."])
+        : null,
+    ]);
+
+    const addLinkTarget = h(
+      "select",
+      { class: "input tiny" },
+      [
+        h("option", { value: "" }, ["Pick a star…"]),
+        ...otherNodes.map((n) => h("option", { value: n.id }, [n.title])),
+      ],
+    );
+    const addLinkKind = h(
+      "select",
+      { class: "input tiny" },
+      LINK_KINDS.map((k) =>
+        h("option", { value: k }, [k === "depends" ? "depends on" : "relates to"]),
+      ),
+    );
+    const addLinkBtn = h(
+      "button",
+      {
+        class: "btn tiny",
+        onclick: () => {
+          const target = addLinkTarget.value;
+          if (!target) return;
+          store.addLink(node.id, target, addLinkKind.value);
+        },
+      },
+      ["Connect"],
+    );
+
+    const linkSection = h("div", { class: "field links-field" }, [
+      h("span", {}, ["Links"]),
+      linkList,
+      h("div", { class: "link-add" }, [addLinkTarget, addLinkKind, addLinkBtn]),
+    ]);
+
     const deleteBtn = h(
       "button",
       {
@@ -157,6 +234,7 @@ export function createEditor(mountEl, store, board) {
           magnitude,
         ]),
         h("label", { class: "field" }, [h("span", {}, ["Notes"]), notes]),
+        linkSection,
       ]),
       h("footer", { class: "editor-foot" }, [setNorth, deleteBtn]),
     );
@@ -193,10 +271,8 @@ export function createEditor(mountEl, store, board) {
       close();
       return;
     }
-    // Only re-render if title/status/type/magnitude changed via board/other UI.
-    // We preserve focus by not re-rendering on every keystroke the user types
-    // here: the input handlers update the store, and this callback would redraw.
-    // Guard: skip if active element lives inside this panel.
+    // Skip full re-render if the user is typing in this panel — it would blow
+    // away focus/caret. Input handlers already update the store directly.
     if (panel.contains(document.activeElement)) return;
     renderForm(node);
   });

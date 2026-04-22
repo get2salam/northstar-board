@@ -556,6 +556,71 @@ body {
   background: color-mix(in oklab, var(--star-blocked) 22%, transparent);
 }
 
+.input.tiny {
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.icon-btn.tiny {
+  width: 22px;
+  height: 22px;
+  font-size: 14px;
+}
+
+.link-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.link-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: color-mix(in oklab, var(--bg-deep) 60%, transparent);
+  border: 1px solid var(--line);
+}
+
+.link-row .link-dir {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-mute);
+}
+
+.link-row .link-name {
+  font-size: 13px;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-row.incoming {
+  background: color-mix(in oklab, var(--bg-lift) 40%, transparent);
+}
+
+.link-empty {
+  list-style: none;
+  color: var(--ink-mute);
+  font-size: 12.5px;
+  font-style: italic;
+  padding: 4px 2px;
+}
+
+.link-add {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 6px;
+  margin-top: 6px;
+}
+
 /* Small screens */
 @media (max-width: 640px) {
   .brand-tag { display: none; }
