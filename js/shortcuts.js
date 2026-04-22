@@ -108,11 +108,30 @@ export function createShortcuts({ store, board, editor }) {
   }
   panel.appendChild(list);
 
+  const footer = document.createElement("div");
+  footer.className = "help-footer";
+
+  const reset = document.createElement("button");
+  reset.className = "btn ghost tiny";
+  reset.textContent = "Reset board";
+  reset.addEventListener("click", () => {
+    if (
+      confirm(
+        "Clear the board and start with a blank constellation? This cannot be undone.",
+      )
+    ) {
+      store.reset();
+      toggleHelp(false);
+    }
+  });
+
   const close = document.createElement("button");
-  close.className = "btn ghost tiny";
+  close.className = "btn primary tiny";
   close.textContent = "Close";
   close.addEventListener("click", () => toggleHelp(false));
-  panel.appendChild(close);
+
+  footer.append(reset, close);
+  panel.appendChild(footer);
 
   overlay.appendChild(panel);
   overlay.addEventListener("click", (e) => {
