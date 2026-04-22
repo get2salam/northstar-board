@@ -201,6 +201,11 @@ body {
   overflow: hidden;
 }
 
+.board-root {
+  position: absolute;
+  inset: 0;
+}
+
 .empty-hero {
   position: absolute;
   inset: 0;
@@ -243,6 +248,146 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 16px;
+}
+
+/* ---------- Constellation SVG ---------- */
+
+.board {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: default;
+  user-select: none;
+  touch-action: none;
+}
+
+/* Links */
+.board .link {
+  stroke: color-mix(in oklab, var(--accent) 55%, transparent);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  opacity: 0.55;
+  transition: opacity 0.3s var(--ease-out), stroke 0.3s var(--ease-out);
+}
+
+.board .link-depends {
+  stroke-dasharray: 2 6;
+}
+
+.board .link-relates {
+  stroke-dasharray: none;
+  opacity: 0.3;
+}
+
+.board .link:hover {
+  opacity: 1;
+  stroke: var(--accent-hot);
+}
+
+/* Stars */
+.board .star {
+  cursor: pointer;
+  transition: transform 0.25s var(--ease-out);
+}
+
+.board .star:hover,
+.board .star:focus-visible {
+  outline: none;
+  transform-box: fill-box;
+}
+
+.board .star .halo {
+  fill: color-mix(in oklab, var(--star-plan) 50%, transparent);
+  opacity: 0.55;
+  transition: opacity 0.25s var(--ease-out), fill 0.3s var(--ease-out);
+  pointer-events: none;
+}
+
+.board .star .core {
+  fill: var(--star-plan);
+  transition: fill 0.3s var(--ease-out);
+}
+
+.board .star .ring {
+  stroke: color-mix(in oklab, var(--star-active) 90%, white 10%);
+  stroke-width: 1.6;
+  opacity: 0.85;
+  transform-origin: center;
+  animation: ringSpin 18s linear infinite;
+}
+
+@keyframes ringSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board .star .ring { animation: none; }
+}
+
+.board .star .label {
+  fill: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  letter-spacing: 0.2px;
+  paint-order: stroke;
+  stroke: var(--bg-deep);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* Status colors */
+.board .star.status-plan .core     { fill: var(--star-plan); }
+.board .star.status-plan .halo     { fill: color-mix(in oklab, var(--star-plan) 55%, transparent); }
+.board .star.status-active .core   { fill: var(--star-active); }
+.board .star.status-active .halo   { fill: color-mix(in oklab, var(--star-active) 60%, transparent); }
+.board .star.status-done .core     { fill: var(--star-done); }
+.board .star.status-done .halo     { fill: color-mix(in oklab, var(--star-done) 55%, transparent); }
+.board .star.status-blocked .core  { fill: var(--star-blocked); }
+.board .star.status-blocked .halo  { fill: color-mix(in oklab, var(--star-blocked) 55%, transparent); }
+
+/* Hover / selected */
+.board .star:hover .halo,
+.board .star.selected .halo {
+  opacity: 1;
+}
+
+.board .star.selected .core {
+  stroke: white;
+  stroke-width: 1.5;
+}
+
+.board .star.selected .label {
+  fill: var(--ink);
+  opacity: 1;
+}
+
+/* Northstar gets the full regal treatment */
+.board .star.north .core {
+  fill: var(--accent-hot);
+}
+
+.board .star.north .halo {
+  fill: color-mix(in oklab, var(--accent-hot) 75%, transparent);
+  opacity: 0.9;
+  animation: pulse 4s var(--ease-in-out) infinite;
+}
+
+.board .star.north .label {
+  font-family: var(--font-display);
+  font-size: 14px;
+  fill: var(--ink);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50%      { opacity: 1;    transform: scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .board .star.north .halo { animation: none; }
 }
 
 /* Small screens */
