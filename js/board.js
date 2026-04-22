@@ -48,8 +48,14 @@ export function createBoard(mountEl, store) {
     class: "board",
     xmlns: SVG_NS,
     preserveAspectRatio: "xMidYMid meet",
-    viewBox: "-600 -400 1200 800",
   });
+  const viewBox = { x: -600, y: -400, w: 1200, h: 800 };
+  const MIN_W = 300;
+  const MAX_W = 4000;
+  const applyViewBox = () => {
+    svg.setAttribute("viewBox", `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
+  };
+  applyViewBox();
 
   const defs = el("defs");
   defs.appendChild(buildGlowFilter("glow", "3", 50));
@@ -62,6 +68,98 @@ export function createBoard(mountEl, store) {
   mountEl.appendChild(svg);
 
   let selectedId = null;
+
+  // ---- screen → board coordinates ----
+  function toBoard(clientX, clientY) {
+    const rect = svg.getBoundingClientRect();
+    const rx = (clientX - rect.left) / rect.width;
+    const ry = (clientY - rect.top) / rect.height;
+    return {
+      x: viewBox.x + rx * viewBox.w,
+      y: viewBox.y + ry * viewBox.h,
+    };
+  }
+
+  // ---- drag / pan / zoom ----
+  let gesture = null; // { kind, ... }
+
+  svg.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    const starEl = e.target.closest(".star");
+    svg.setPointerCapture(e.pointerId);
+    if (starEl) {
+      const id = starEl.getAttribute("data-id");
+      const node = store.get().nodes.find((n) => n.id === id);
+      if (!node) return;
+      const start = toBoard(e.clientX, e.clientY);
+      gesture = {
+        kind: "drag",
+        id,
+        offsetX: node.x - start.x,
+        offsetY: node.y - start.y,
+        moved: false,
+      };
+      starEl.classList.add("dragging");
+    } else {
+      gesture = {
+        kind: "pan",
+        startClient: { x: e.clientX, y: e.clientY },
+        startView: { x: viewBox.x, y: viewBox.y },
+      };
+      svg.classList.add("panning");
+    }
+  });
+
+  svg.addEventListener("pointermove", (e) => {
+    if (!gesture) return;
+    if (gesture.kind === "drag") {
+      const p = toBoard(e.clientX, e.clientY);
+      const nx = Math.round(p.x + gesture.offsetX);
+      const ny = Math.round(p.y + gesture.offsetY);
+      gesture.moved = true;
+      // Live-update via the store so links follow.
+      store.updateNode(gesture.id, { x: nx, y: ny });
+    } else if (gesture.kind === "pan") {
+      const rect = svg.getBoundingClientRect();
+      const scaleX = viewBox.w / rect.width;
+      const scaleY = viewBox.h / rect.height;
+      viewBox.x = gesture.startView.x - (e.clientX - gesture.startClient.x) * scaleX;
+      viewBox.y = gesture.startView.y - (e.clientY - gesture.startClient.y) * scaleY;
+      applyViewBox();
+    }
+  });
+
+  function endGesture(e) {
+    if (!gesture) return;
+    const starEl = svg.querySelector(`.star[data-id="${gesture.id}"]`);
+    if (starEl) starEl.classList.remove("dragging");
+    svg.classList.remove("panning");
+    const wasDrag = gesture.kind === "drag" && gesture.moved;
+    gesture = null;
+    if (wasDrag) {
+      // Suppress the click that will follow so we don't open the editor.
+      svg.setAttribute("data-suppress-click", "1");
+      setTimeout(() => svg.removeAttribute("data-suppress-click"), 0);
+    }
+    if (e && svg.hasPointerCapture(e.pointerId)) svg.releasePointerCapture(e.pointerId);
+  }
+
+  svg.addEventListener("pointerup", endGesture);
+  svg.addEventListener("pointercancel", endGesture);
+
+  svg.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const factor = e.deltaY > 0 ? 1.12 : 1 / 1.12;
+    const p = toBoard(e.clientX, e.clientY);
+    const newW = Math.min(MAX_W, Math.max(MIN_W, viewBox.w * factor));
+    const newH = (newW / viewBox.w) * viewBox.h;
+    // Keep the cursor's board coordinate anchored during zoom.
+    viewBox.x = p.x - ((p.x - viewBox.x) * newW) / viewBox.w;
+    viewBox.y = p.y - ((p.y - viewBox.y) * newH) / viewBox.h;
+    viewBox.w = newW;
+    viewBox.h = newH;
+    applyViewBox();
+  }, { passive: false });
 
   function renderLinks(state, byId) {
     linksLayer.replaceChildren(
@@ -136,6 +234,7 @@ export function createBoard(mountEl, store) {
 
     group.addEventListener("click", (e) => {
       e.stopPropagation();
+      if (svg.hasAttribute("data-suppress-click")) return;
       selectedId = node.id;
       render(store.get());
       mountEl.dispatchEvent(
@@ -155,6 +254,7 @@ export function createBoard(mountEl, store) {
   }
 
   svg.addEventListener("click", () => {
+    if (svg.hasAttribute("data-suppress-click")) return;
     if (selectedId === null) return;
     selectedId = null;
     render(store.get());
@@ -162,6 +262,32 @@ export function createBoard(mountEl, store) {
   });
 
   const unsubscribe = store.subscribe(render);
+
+  function resetView() {
+    viewBox.x = -600;
+    viewBox.y = -400;
+    viewBox.w = 1200;
+    viewBox.h = 800;
+    applyViewBox();
+  }
+
+  function fitToContent(padding = 120) {
+    const nodes = store.get().nodes;
+    if (!nodes.length) return resetView();
+    const xs = nodes.map((n) => n.x);
+    const ys = nodes.map((n) => n.y);
+    const minX = Math.min(...xs) - padding;
+    const maxX = Math.max(...xs) + padding;
+    const minY = Math.min(...ys) - padding;
+    const maxY = Math.max(...ys) + padding;
+    const w = Math.max(maxX - minX, 600);
+    const h = Math.max(maxY - minY, 400);
+    viewBox.x = minX - (w - (maxX - minX)) / 2;
+    viewBox.y = minY - (h - (maxY - minY)) / 2;
+    viewBox.w = w;
+    viewBox.h = h;
+    applyViewBox();
+  }
 
   return {
     svg,
@@ -174,5 +300,7 @@ export function createBoard(mountEl, store) {
       selectedId = id;
       render(store.get());
     },
+    resetView,
+    fitToContent,
   };
 }
