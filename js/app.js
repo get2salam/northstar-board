@@ -4,6 +4,7 @@ import { createStore } from "./store.js";
 import { createBoard } from "./board.js";
 import { createEditor } from "./editor.js";
 import { createShortcuts } from "./shortcuts.js";
+import { exportBoard, importBoard, loadSampleIfEmpty } from "./io.js";
 
 const store = createStore();
 const statusEl = document.getElementById("status");
@@ -33,12 +34,12 @@ function bindToolbar() {
         board.select(node.id);
         editor.open(node.id);
       });
+    } else if (label === "Import") {
+      btn.addEventListener("click", () => importBoard(store));
+    } else if (label === "Export") {
+      btn.addEventListener("click", () => exportBoard(store));
     } else if (label === "Help") {
       btn.addEventListener("click", () => shortcuts.toggleHelp(true));
-    } else {
-      // Import / Export arrive in the next commit.
-      btn.disabled = true;
-      btn.title = "Coming soon";
     }
   }
 }
@@ -57,5 +58,10 @@ function render(state) {
 }
 
 store.subscribe(render);
+
+// First-run magic: load the sample board so the repo looks alive.
+loadSampleIfEmpty(store).then((loaded) => {
+  if (loaded) board.fitToContent();
+});
 
 window.northstar = { store, board, editor, shortcuts };

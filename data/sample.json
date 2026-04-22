@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "meta": {
+    "name": "Launch the solo studio",
+    "createdAt": "2026-04-01T10:00:00.000Z",
+    "updatedAt": "2026-04-01T10:00:00.000Z",
+    "northstar": "n_ship"
+  },
+  "nodes": [
+    {
+      "id": "n_ship",
+      "title": "Ship a product I'm proud of",
+      "notes": "The northstar. Everything else exists to serve this.",
+      "type": "north",
+      "status": "active",
+      "x": 0,
+      "y": -220,
+      "magnitude": 4,
+      "createdAt": "2026-04-01T10:00:00.000Z",
+      "updatedAt": "2026-04-01T10:00:00.000Z"
+    },
+    {
+      "id": "n_mvp",
+      "title": "Cut an MVP",
+      "notes": "Smallest thing that solves one real problem end-to-end.",
+      "type": "goal",
+      "status": "active",
+      "x": -260,
+      "y": -20,
+      "magnitude": 3,
+      "createdAt": "2026-04-01T10:00:00.000Z",
+      "updatedAt": "2026-04-01T10:00:00.000Z"
+    },
+    {
+      "id": "n_users",
+      "title": "Find 10 real users",
+      "notes": "Warm intros beat cold launches.",
+      "type": "goal",
+      "status": "plan",
+      "x": 260,
+      "y": -20,
+      "magnitude": 3,
+      "createdAt": "2026-04-01T10:00:00.000Z",
+      "updatedAt": "2026-04-01T10:00:00.000Z"
+    },
+    {
+      "id": "n_design",
+      "title": "Design a voice, not a logo",
+      "notes": "Typography, tone, and rhythm — identity beats branding.",
+      "type": "milestone",
+      "status": "done",
+      "x": -420,
+      "y": 160,
+      "magnitude": 2,
+      "createdAt": "2026-04-01T10:00:00.000Z",
+      "updatedAt": "2026-04-01T10:00:00.000Z"
+    },
+    {
+      "id": "n_arch",
+      "title": "Pick the stack",
+      "notes": "Boring tech. Stdlib first, frameworks last.",
+      "type": "milestone",
+      "status": "done",
+      "x": -140,
+      "y": 180,
+      "magnitude": 2,
+      "createdAt": "2026-04-01T10:00:00.000Z",
+      "updatedAt": "2026-04-01T10:00:00.000Z"
+    },
+    {
+      "id": "n_auth",
+      "title": "Ship login & auth",
+      "notes": "Local-first means no password resets.",
+      "type": "milestone",
+      "status": "active",
+      "x": 60,
+      "y": 220,
+      "magnitude": 2,
+      "createdAt": "2026-04-01T10:00:00.000Z",
+      "updatedAt": "2026-04-01T10:00:00.000Z"
+    },
+    {
+      "id": "n_landing",
+      "title": "A landing page people screenshot",
+      "notes": "If the shot isn't shareable, the page isn't finished.",
+      "type": "milestone",
+      "status": "plan",
+      "x": 320,
+      "y": 180,
+      "magnitude": 2,
+      "createdAt": "2026-04-01T10:00:00.000Z",
+      "updatedAt": "2026-04-01T10:00:00.000Z"
+    },
+    {
+      "id": "n_outreach",
+      "title": "Line up 20 warm intros",
+      "notes": "Talk to operators, not prospects.",
+      "type": "milestone",
+      "status": "plan",
+      "x": 480,
+      "y": 120,
+      "magnitude": 2,
+      "createdAt": "2026-04-01T10:00:00.000Z",
+      "updatedAt": "2026-04-01T10:00:00.000Z"
+    },
+    {
+      "id": "n_focus",
+      "title": "Say no to the clever thing",
+      "notes": "Ambient blocker. Check weekly.",
+      "type": "goal",
+      "status": "blocked",
+      "x": 0,
+      "y": 40,
+      "magnitude": 1,
+      "createdAt": "2026-04-01T10:00:00.000Z",
+      "updatedAt": "2026-04-01T10:00:00.000Z"
+    }
+  ],
+  "links": [
+    { "id": "l1", "from": "n_mvp",      "to": "n_ship",   "kind": "depends" },
+    { "id": "l2", "from": "n_users",    "to": "n_ship",   "kind": "depends" },
+    { "id": "l3", "from": "n_design",   "to": "n_mvp",    "kind": "depends" },
+    { "id": "l4", "from": "n_arch",     "to": "n_mvp",    "kind": "depends" },
+    { "id": "l5", "from": "n_auth",     "to": "n_mvp",    "kind": "depends" },
+    { "id": "l6", "from": "n_landing",  "to": "n_users",  "kind": "depends" },
+    { "id": "l7", "from": "n_outreach", "to": "n_users",  "kind": "depends" },
+    { "id": "l8", "from": "n_focus",    "to": "n_ship",   "kind": "relates" }
+  ]
+}
