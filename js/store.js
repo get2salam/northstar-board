@@ -8,6 +8,19 @@ export const NODE_TYPES = ["north", "goal", "milestone"];
 export const NODE_STATUSES = ["plan", "active", "done", "blocked"];
 export const LINK_KINDS = ["depends", "relates"];
 
+export const MAGNITUDE_MIN = 1;
+export const MAGNITUDE_MAX = 4;
+
+const UPDATABLE_NODE_FIELDS = new Set([
+  "title", "notes", "type", "status", "x", "y", "magnitude",
+]);
+
+function clampMagnitude(value, fallback = 2) {
+  const n = Math.round(Number(value));
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(MAGNITUDE_MAX, Math.max(MAGNITUDE_MIN, n));
+}
+
 function uid(prefix = "n") {
   // Short, sortable-ish id: prefix + base36 timestamp + random tail.
   return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -35,6 +48,15 @@ function validate(board) {
   if (!board || typeof board !== "object") return false;
   if (board.version !== SCHEMA_VERSION) return false;
   if (!Array.isArray(board.nodes) || !Array.isArray(board.links)) return false;
+  const ids = new Set();
+  for (const n of board.nodes) {
+    if (!n || typeof n.id !== "string" || ids.has(n.id)) return false;
+    ids.add(n.id);
+  }
+  for (const l of board.links) {
+    if (!l || typeof l.id !== "string") return false;
+    if (!ids.has(l.from) || !ids.has(l.to)) return false;
+  }
   return true;
 }
 
@@ -85,7 +107,7 @@ export function createStore() {
         status: NODE_STATUSES.includes(partial.status) ? partial.status : "plan",
         x: typeof partial.x === "number" ? partial.x : 0,
         y: typeof partial.y === "number" ? partial.y : 0,
-        magnitude: partial.magnitude ?? 2,
+        magnitude: clampMagnitude(partial.magnitude),
         createdAt: nowIso(),
         updatedAt: nowIso(),
       };
@@ -96,8 +118,17 @@ export function createStore() {
 
     updateNode(id, patch) {
       const node = state.nodes.find((n) => n.id === id);
-      if (!node) return null;
-      Object.assign(node, patch, { updatedAt: nowIso() });
+      if (!node || !patch) return null;
+      const safe = {};
+      for (const [k, v] of Object.entries(patch)) {
+        if (!UPDATABLE_NODE_FIELDS.has(k)) continue;
+        if (k === "type" && !NODE_TYPES.includes(v)) continue;
+        if (k === "status" && !NODE_STATUSES.includes(v)) continue;
+        if (k === "magnitude") { safe[k] = clampMagnitude(v, node.magnitude); continue; }
+        if ((k === "x" || k === "y") && !Number.isFinite(v)) continue;
+        safe[k] = v;
+      }
+      Object.assign(node, safe, { updatedAt: nowIso() });
       emit();
       return node;
     },
