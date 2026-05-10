@@ -47,16 +47,22 @@ function emptyBoard() {
 function validate(board) {
   if (!board || typeof board !== "object") return false;
   if (board.version !== SCHEMA_VERSION) return false;
+  if (!board.meta || typeof board.meta !== "object") return false;
   if (!Array.isArray(board.nodes) || !Array.isArray(board.links)) return false;
-  const ids = new Set();
+  const nodeIds = new Set();
   for (const n of board.nodes) {
-    if (!n || typeof n.id !== "string" || ids.has(n.id)) return false;
-    ids.add(n.id);
+    if (!n || typeof n.id !== "string" || nodeIds.has(n.id)) return false;
+    nodeIds.add(n.id);
   }
+  const linkIds = new Set();
   for (const l of board.links) {
-    if (!l || typeof l.id !== "string") return false;
-    if (!ids.has(l.from) || !ids.has(l.to)) return false;
+    if (!l || typeof l.id !== "string" || linkIds.has(l.id)) return false;
+    if (!nodeIds.has(l.from) || !nodeIds.has(l.to)) return false;
+    if (l.from === l.to) return false;
+    linkIds.add(l.id);
   }
+  const star = board.meta.northstar;
+  if (star !== null && star !== undefined && !nodeIds.has(star)) return false;
   return true;
 }
 
