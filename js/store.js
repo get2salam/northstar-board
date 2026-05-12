@@ -52,6 +52,12 @@ function validate(board) {
   const nodeIds = new Set();
   for (const n of board.nodes) {
     if (!n || typeof n.id !== "string" || nodeIds.has(n.id)) return false;
+    if (typeof n.title !== "string") return false;
+    if (!NODE_TYPES.includes(n.type)) return false;
+    if (!NODE_STATUSES.includes(n.status)) return false;
+    if (!Number.isFinite(n.x) || !Number.isFinite(n.y)) return false;
+    if (!Number.isInteger(n.magnitude) ||
+        n.magnitude < MAGNITUDE_MIN || n.magnitude > MAGNITUDE_MAX) return false;
     nodeIds.add(n.id);
   }
   const linkIds = new Set();
@@ -59,6 +65,7 @@ function validate(board) {
     if (!l || typeof l.id !== "string" || linkIds.has(l.id)) return false;
     if (!nodeIds.has(l.from) || !nodeIds.has(l.to)) return false;
     if (l.from === l.to) return false;
+    if (!LINK_KINDS.includes(l.kind)) return false;
     linkIds.add(l.id);
   }
   const star = board.meta.northstar;
@@ -147,7 +154,13 @@ export function createStore() {
     },
 
     setNorthstar(id) {
-      state.meta.northstar = id;
+      if (id === null || id === undefined) {
+        state.meta.northstar = null;
+      } else if (state.nodes.some((n) => n.id === id)) {
+        state.meta.northstar = id;
+      } else {
+        return;
+      }
       emit();
     },
 
@@ -155,6 +168,7 @@ export function createStore() {
 
     addLink(from, to, kind = "depends") {
       if (from === to) return null;
+      if (!LINK_KINDS.includes(kind)) return null;
       if (!state.nodes.some((n) => n.id === from)) return null;
       if (!state.nodes.some((n) => n.id === to)) return null;
       const exists = state.links.find(
