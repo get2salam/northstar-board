@@ -13,10 +13,15 @@ function matches(spec, e) {
   const needsMeta = spec.includes("mod");
   const pressedMeta = e.metaKey || e.ctrlKey;
   if (needsMeta !== pressedMeta) return false;
-  if (spec.includes("shift") !== e.shiftKey) return false;
   if (spec.includes("alt") !== e.altKey) return false;
   const key = spec.split("+").pop();
-  return e.key.toLowerCase() === key.toLowerCase();
+  if (e.key.toLowerCase() !== key.toLowerCase()) return false;
+  // Only enforce Shift for keys whose character changes with it (letters).
+  // Punctuation like "?" or "!" already implies Shift on most layouts, so
+  // requiring it in the spec would prevent the shortcut from ever firing.
+  const shiftMattersForKey = /^[a-z]$/i.test(key);
+  if (shiftMattersForKey && spec.includes("shift") !== e.shiftKey) return false;
+  return true;
 }
 
 export function createShortcuts({ store, board, editor }) {
