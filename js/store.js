@@ -21,6 +21,10 @@ function clampMagnitude(value, fallback = 2) {
   return Math.min(MAGNITUDE_MAX, Math.max(MAGNITUDE_MIN, n));
 }
 
+function safeText(value, fallback = "") {
+  return typeof value === "string" ? value : fallback;
+}
+
 function uid(prefix = "n") {
   // Short, sortable-ish id: prefix + base36 timestamp + random tail.
   return `${prefix}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -48,11 +52,13 @@ function validate(board) {
   if (!board || typeof board !== "object") return false;
   if (board.version !== SCHEMA_VERSION) return false;
   if (!board.meta || typeof board.meta !== "object") return false;
+  if (typeof board.meta.name !== "string") return false;
   if (!Array.isArray(board.nodes) || !Array.isArray(board.links)) return false;
   const nodeIds = new Set();
   for (const n of board.nodes) {
     if (!n || typeof n.id !== "string" || nodeIds.has(n.id)) return false;
     if (typeof n.title !== "string") return false;
+    if (n.notes !== undefined && typeof n.notes !== "string") return false;
     if (!NODE_TYPES.includes(n.type)) return false;
     if (!NODE_STATUSES.includes(n.status)) return false;
     if (!Number.isFinite(n.x) || !Number.isFinite(n.y)) return false;
@@ -114,8 +120,8 @@ export function createStore() {
     addNode(partial = {}) {
       const node = {
         id: uid("n"),
-        title: partial.title?.trim() || "Untitled star",
-        notes: partial.notes ?? "",
+        title: safeText(partial.title).trim() || "Untitled star",
+        notes: safeText(partial.notes),
         type: NODE_TYPES.includes(partial.type) ? partial.type : "goal",
         status: NODE_STATUSES.includes(partial.status) ? partial.status : "plan",
         x: typeof partial.x === "number" ? partial.x : 0,
@@ -139,6 +145,7 @@ export function createStore() {
         if (k === "status" && !NODE_STATUSES.includes(v)) continue;
         if (k === "magnitude") { safe[k] = clampMagnitude(v, node.magnitude); continue; }
         if ((k === "x" || k === "y") && !Number.isFinite(v)) continue;
+        if ((k === "title" || k === "notes") && typeof v !== "string") continue;
         safe[k] = v;
       }
       Object.assign(node, safe, { updatedAt: nowIso() });
@@ -189,7 +196,7 @@ export function createStore() {
     // ----- board ops -----
 
     rename(name) {
-      state.meta.name = name?.trim() || "Untitled board";
+      state.meta.name = safeText(name).trim() || "Untitled board";
       emit();
     },
 
