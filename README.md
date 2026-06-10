@@ -63,6 +63,22 @@ Running a tiny server (`python -m http.server`, `npx serve`, etc.) gives the
 cleanest experience because `fetch()` succeeds and ES modules load without
 CORS quirks.
 
+## Verifying locally
+
+There's no build step, but there is a tiny `node:test` suite that guards the
+sample board against regressions: it checks that `data/sample.json` parses
+against the v1 schema, that every link points at a real node, that the
+`depends` graph is acyclic, and that `data/sample.json` stays in lockstep
+with the `SAMPLE_BOARD` fallback embedded in `js/sample.js` for `file://`
+loads.
+
+```bash
+node --test test/sample.test.mjs
+```
+
+Runs in well under a second on Node 18+ — no dependencies, no install. The
+same suite runs in CI on every push and pull request.
+
 ## Keyboard shortcuts
 
 | Keys            | Action                           |
