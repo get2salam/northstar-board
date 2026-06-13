@@ -179,6 +179,14 @@ export function createBoard(mountEl, store) {
     );
   }
 
+  function activateStar(id) {
+    selectedId = id;
+    render(store.get());
+    mountEl.dispatchEvent(
+      new CustomEvent("star:select", { detail: { id } }),
+    );
+  }
+
   function renderStar(node, northstarId) {
     const isNorth = node.id === northstarId || node.type === "north";
     const r = MAGNITUDE_RADIUS[node.magnitude] ?? 8;
@@ -196,7 +204,7 @@ export function createBoard(mountEl, store) {
       "data-id": node.id,
       tabindex: "0",
       role: "button",
-      "aria-label": `${node.title} (${node.status})`,
+      "aria-label": `${node.title} (${node.status}). Press Enter to edit this star.`,
     });
 
     group.appendChild(
@@ -235,11 +243,14 @@ export function createBoard(mountEl, store) {
     group.addEventListener("click", (e) => {
       e.stopPropagation();
       if (svg.hasAttribute("data-suppress-click")) return;
-      selectedId = node.id;
-      render(store.get());
-      mountEl.dispatchEvent(
-        new CustomEvent("star:select", { detail: { id: node.id } }),
-      );
+      activateStar(node.id);
+    });
+
+    group.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      e.stopPropagation();
+      activateStar(node.id);
     });
 
     return group;

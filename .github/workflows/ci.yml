@@ -15,5 +15,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Run sample integrity tests
-        run: node --test test/sample.test.mjs
+      - name: Run static app tests
+        run: node --test

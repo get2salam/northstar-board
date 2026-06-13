@@ -315,6 +315,20 @@ body {
   transform-box: fill-box;
 }
 
+.board .star:focus-visible .core {
+  stroke: white;
+  stroke-width: 2;
+}
+
+.board .star:focus-visible .halo {
+  opacity: 1;
+}
+
+.board .star:focus-visible .label {
+  fill: var(--ink);
+  opacity: 1;
+}
+
 .board .star .halo {
   fill: color-mix(in oklab, var(--star-plan) 50%, transparent);
   opacity: 0.55;
