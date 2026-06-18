@@ -5,6 +5,7 @@ import { createBoard } from "./board.js";
 import { createEditor } from "./editor.js";
 import { createShortcuts } from "./shortcuts.js";
 import { exportBoard, importBoard, loadSampleIfEmpty } from "./io.js";
+import { evaluateBoard } from "./evaluation.js";
 
 const store = createStore();
 const statusEl = document.getElementById("status");
@@ -50,8 +51,10 @@ function render(state) {
   const n = state.nodes.length;
   const l = state.links.length;
   const when = new Date(state.meta.updatedAt).toLocaleTimeString();
+  const readiness = evaluateBoard(state);
   if (statusEl) {
-    statusEl.textContent = `${state.meta.name} · ${n} stars · ${l} links · saved ${when} · press ? for help`;
+    statusEl.textContent = `${state.meta.name} · ${n} stars · ${l} links · ${readiness.score}/100 ${readiness.grade} · saved ${when} · press ? for help`;
+    statusEl.title = readiness.signals.join("\n");
   }
   const hero = document.querySelector(".empty-hero");
   if (hero) hero.style.display = n === 0 ? "" : "none";

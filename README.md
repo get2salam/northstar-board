@@ -45,6 +45,9 @@ founder, the grad student, the person quietly shipping a side project.
   status, `?` for the full cheat sheet.
 - **A sample board to start** — first-run loads a thoughtful "Launch the solo
   studio" constellation so the app feels alive before you write a thing.
+- **Readiness scoring** — a deterministic 0–100 board evaluation surfaces
+  whether your constellation has a northstar, visible progress, dependency
+  coverage, manageable blockers, and enough context for high-magnitude work.
 
 ## Getting started
 
@@ -70,7 +73,8 @@ static app against regressions: it checks that `data/sample.json` parses
 against the v1 schema, that every link points at a real node, that the
 `depends` graph is acyclic, that `data/sample.json` stays in lockstep
 with the `SAMPLE_BOARD` fallback embedded in `js/sample.js` for `file://`
-loads, and that the SVG stars keep their keyboard activation affordances.
+loads, that the SVG stars keep their keyboard activation affordances, and that
+the deterministic readiness evaluator keeps returning stable scoring signals.
 
 ```bash
 node --test
@@ -139,6 +143,7 @@ northstar-board/
 │   ├── store.js        # data model + localStorage + pub/sub
 │   ├── board.js        # SVG constellation renderer + drag/pan/zoom
 │   ├── editor.js       # side panel: create/edit stars and their links
+│   ├── evaluation.js   # deterministic board readiness score + signals
 │   ├── shortcuts.js    # keyboard bindings + help overlay
 │   ├── io.js           # import / export / first-run sample loading
 │   └── sample.js       # embedded sample board (fallback for file://)
