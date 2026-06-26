@@ -36,7 +36,12 @@ function h(tag, attrs = {}, children = []) {
 export function createEditor(mountEl, store, board) {
   let currentId = null;
 
-  const panel = h("aside", { class: "editor", "aria-hidden": "true" });
+  const panel = h("aside", {
+    class: "editor",
+    role: "complementary",
+    "aria-label": "Star editor",
+    "aria-hidden": "true",
+  });
   mountEl.appendChild(panel);
 
   function renderEmpty() {
@@ -47,6 +52,7 @@ export function createEditor(mountEl, store, board) {
         h(
           "button",
           {
+            type: "button",
             class: "btn primary",
             onclick: () => {
               const node = store.addNode({
@@ -70,6 +76,7 @@ export function createEditor(mountEl, store, board) {
       type: "text",
       value: node.title,
       placeholder: "Name this star",
+      autocomplete: "off",
       oninput: (e) => store.updateNode(node.id, { title: e.target.value }),
     });
 
@@ -96,12 +103,19 @@ export function createEditor(mountEl, store, board) {
 
     const statusButtons = h(
       "div",
-      { class: "pills" },
+      {
+        class: "pills",
+        role: "group",
+        "aria-label": "Star status",
+      },
       NODE_STATUSES.map((s) =>
         h(
           "button",
           {
+            type: "button",
             class: `pill pill-${s} ${s === node.status ? "active" : ""}`,
+            "aria-pressed": s === node.status ? "true" : "false",
+            "aria-label": `Mark star as ${STATUS_LABELS[s]}`,
             onclick: () => store.updateNode(node.id, { status: s }),
           },
           [STATUS_LABELS[s]],
@@ -116,6 +130,8 @@ export function createEditor(mountEl, store, board) {
       max: "4",
       step: "1",
       value: String(node.magnitude ?? 2),
+      "aria-label": "Star magnitude",
+      "aria-valuetext": `${node.magnitude ?? 2} of 4 brightness`,
       oninput: (e) =>
         store.updateNode(node.id, { magnitude: Number(e.target.value) }),
     });
@@ -123,7 +139,9 @@ export function createEditor(mountEl, store, board) {
     const setNorth = h(
       "button",
       {
+        type: "button",
         class: "btn ghost tiny",
+        "aria-label": `Make ${node.title} the northstar`,
         onclick: () => store.setNorthstar(node.id),
       },
       ["Make northstar"],
@@ -145,7 +163,7 @@ export function createEditor(mountEl, store, board) {
             "button",
             {
               class: "icon-btn tiny",
-              "aria-label": "Remove link",
+              "aria-label": `Remove link to ${titleOf(l.to)}`,
               onclick: () => store.removeLink(l.id),
             },
             ["×"],
@@ -160,7 +178,7 @@ export function createEditor(mountEl, store, board) {
             "button",
             {
               class: "icon-btn tiny",
-              "aria-label": "Remove link",
+              "aria-label": `Remove incoming link from ${titleOf(l.from)}`,
               onclick: () => store.removeLink(l.id),
             },
             ["×"],
@@ -174,7 +192,7 @@ export function createEditor(mountEl, store, board) {
 
     const addLinkTarget = h(
       "select",
-      { class: "input tiny" },
+      { class: "input tiny", "aria-label": "Star to connect" },
       [
         h("option", { value: "" }, ["Pick a star…"]),
         ...otherNodes.map((n) => h("option", { value: n.id }, [n.title])),
@@ -182,7 +200,7 @@ export function createEditor(mountEl, store, board) {
     );
     const addLinkKind = h(
       "select",
-      { class: "input tiny" },
+      { class: "input tiny", "aria-label": "Connection type" },
       LINK_KINDS.map((k) =>
         h("option", { value: k }, [k === "depends" ? "depends on" : "relates to"]),
       ),
@@ -190,7 +208,9 @@ export function createEditor(mountEl, store, board) {
     const addLinkBtn = h(
       "button",
       {
+        type: "button",
         class: "btn tiny",
+        "aria-label": "Connect selected star",
         onclick: () => {
           const target = addLinkTarget.value;
           if (!target) return;
@@ -209,7 +229,9 @@ export function createEditor(mountEl, store, board) {
     const deleteBtn = h(
       "button",
       {
+        type: "button",
         class: "btn danger tiny",
+        "aria-label": `Delete ${node.title}`,
         onclick: () => {
           if (confirm(`Delete "${node.title}"? This also removes its links.`)) {
             store.removeNode(node.id);
@@ -228,7 +250,7 @@ export function createEditor(mountEl, store, board) {
       h("div", { class: "editor-body" }, [
         h("label", { class: "field" }, [h("span", {}, ["Title"]), title]),
         h("label", { class: "field" }, [h("span", {}, ["Type"]), typeSelect]),
-        h("label", { class: "field" }, [h("span", {}, ["Status"]), statusButtons]),
+        h("div", { class: "field" }, [h("span", {}, ["Status"]), statusButtons]),
         h("label", { class: "field" }, [
           h("span", {}, [`Magnitude · ${node.magnitude ?? 2}`]),
           magnitude,

@@ -28,3 +28,15 @@ test("focused stars have a visible focus treatment", async () => {
   assert.match(css, /\.board \.star:focus-visible \.core/, "focused star core needs a visible ring");
   assert.match(css, /\.board \.star:focus-visible \.label/, "focused star label should become prominent");
 });
+
+test("editor controls expose explicit assistive labels", async () => {
+  const editor = await source("js/editor.js");
+
+  assert.match(editor, /role:\s*"complementary"/, "editor panel should expose a landmark role");
+  assert.match(editor, /"aria-label":\s*"Star editor"/, "editor panel should have a stable label");
+  assert.match(editor, /role:\s*"group"/, "status pills should be grouped for screen readers");
+  assert.match(editor, /"aria-pressed":\s*s === node\.status \? "true" : "false"/, "status pills must announce the selected state");
+  assert.match(editor, /"aria-valuetext":\s*`\$\{node\.magnitude \?\? 2\} of 4 brightness`/, "magnitude slider should explain its scale");
+  assert.match(editor, /"aria-label":\s*"Star to connect"/, "link target select should be labelled");
+  assert.match(editor, /Remove incoming link from/, "incoming link removal should name the affected star");
+});
